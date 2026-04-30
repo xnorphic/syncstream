@@ -53,9 +53,6 @@ Results return as structured JSON: `threat_level`, `summary`, `benefits`, `poten
 Analyzed skills are embedded and upserted into Pinecone with a cosine similarity threshold of **>0.90**. This creates a persistent threat memory: the second a known-malicious prompt variant appears, it's identified instantly — no LLM call needed. As the index grows, the system becomes faster and smarter. This is the difference between a one-shot scanner and a **living security system**.
 
 
-### 💳 Stripe Paywall — 5,000 Character Limit
-Free-tier analysis is capped at 5,000 characters. Skills exceeding this limit trigger a high-visibility paywall alert — the Analyze button unmounts and a `Unlock Deep Scan — $1.00` Stripe CTA appears. The character counter turns amber at 4,000 and red at 5,000. Enforced both client-side and server-side.
-
 
 ### 🤖 V1.1 Auto-Curation Engine *(New)*
 Safe skills don't disappear after analysis — they enter an automated evaluation pipeline. The `/api/admin/curate` endpoint:
