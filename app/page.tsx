@@ -8,7 +8,6 @@ import MetricsDashboard from '@/components/MetricsDashboard';
 import ThreatTicker from '@/components/ThreatTicker';
 
 const CHAR_LIMIT = 5_000;
-const STRIPE_LINK = 'https://buy.stripe.com/placeholder';
 
 // ── Nav ────────────────────────────────────────────────────────────────────
 
@@ -108,37 +107,35 @@ function PaywallAlert({ charCount }: { charCount: number }) {
             ✕ Character Limit Exceeded
           </p>
           <p className="text-sm" style={{ color: '#9a9898', lineHeight: 1.6 }}>
-            Free tier is capped at{' '}
+            The current version supports up to{' '}
             <span style={{ color: '#fdfcfc', fontWeight: 700 }}>
-              {CHAR_LIMIT.toLocaleString()} chars
+              {CHAR_LIMIT.toLocaleString()} characters
             </span>
             . Your skill is{' '}
             <span style={{ color: '#ff3b30', fontWeight: 700 }}>
               {charCount.toLocaleString()} chars
             </span>
-            . Unlock Deep Scan for unlimited prompt length and priority analysis.
+            . Higher limits are coming soon — please trim your prompt to continue.
           </p>
         </div>
-        <a
-          href={STRIPE_LINK}
-          target="_blank"
-          rel="noopener noreferrer"
+        <div
           style={{
-            display: 'inline-block',
-            backgroundColor: '#fdfcfc',
-            color: '#201d1d',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: 'rgba(255,214,10,0.08)',
+            border: '1px solid rgba(255,214,10,0.3)',
             borderRadius: '4px',
-            padding: '8px 20px',
-            fontSize: '14px',
-            fontWeight: 700,
-            fontFamily: 'inherit',
-            textDecoration: 'none',
+            padding: '8px 16px',
             whiteSpace: 'nowrap',
             flexShrink: 0,
           }}
         >
-          Unlock Deep Scan — $1.00
-        </a>
+          <span style={{ fontSize: '13px' }}>⏳</span>
+          <span style={{ color: '#ffd60a', fontSize: '13px', fontWeight: 700 }}>
+            Higher limits coming soon
+          </span>
+        </div>
       </div>
     </div>
   );

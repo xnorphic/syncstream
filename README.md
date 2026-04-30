@@ -55,8 +55,8 @@ Analyzed skills are embedded and upserted into Pinecone with a cosine similarity
 ### 🔄 Gemini 2.5 Flash Fallback
 The LLM pipeline uses a try/catch architecture. Claude Sonnet is the primary analyzer. If Anthropic is unavailable (credit exhaustion, rate limits, regional outages), the system automatically falls back to Google Gemini 2.5 Flash with the identical meta-prompt. The frontend displays `via gemini fallback` transparently. Zero downtime. Zero user friction.
 
-### 💳 Stripe Paywall — 5,000 Character Limit
-Free-tier analysis is capped at 5,000 characters. Skills exceeding this limit trigger a high-visibility paywall alert — the Analyze button unmounts and a `Unlock Deep Scan — $1.00` Stripe CTA appears. The character counter turns amber at 4,000 and red at 5,000. Enforced both client-side and server-side.
+### 📏 5,000 Character Limit *(Higher Limits Coming Soon)*
+The current version supports up to 5,000 characters per skill analysis. Skills exceeding this limit trigger a high-visibility alert — the Analyze button is disabled and a "Higher limits coming soon" notice appears. The character counter turns amber at 4,000 and red at 5,000. Enforced both client-side and server-side. Paid tiers with expanded limits are in development.
 
 ### 🛡 Secure Admin Dashboard
 A password-protected admin panel at `/admin` built with Material UI (dark-themed to DESIGN.md spec). The frontend sends the admin secret as a Bearer token — comparison happens exclusively server-side against the `ADMIN_SECRET` env var. The browser **never** receives the secret. Features:
@@ -260,7 +260,7 @@ admin_assets/            ← tracked in git (no secrets)
 | `vetted_skills/` | Git-ignored — local filesystem only |
 | API keys | Encrypted at rest in Vercel |
 | Pinecone access | Server-side only — client never touches vector DB |
-| Character paywall | Client UX enforced by server input validation |
+| Character limit | Client UX enforced by server input validation (paid tiers coming soon) |
 
 ---
 
