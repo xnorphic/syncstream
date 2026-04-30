@@ -1,64 +1,295 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import SkillInput from '@/components/SkillInput';
+import ResultCard, { type AnalysisResult } from '@/components/ResultCard';
+import LoadingState from '@/components/LoadingState';
+import MetricsDashboard from '@/components/MetricsDashboard';
+import ThreatTicker from '@/components/ThreatTicker';
+
+const CHAR_LIMIT = 5_000;
+const STRIPE_LINK = 'https://buy.stripe.com/placeholder';
+
+// ── Nav ────────────────────────────────────────────────────────────────────
+
+function Nav() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <nav
+      className="w-full px-6 py-4 flex items-center justify-between"
+      style={{ borderBottom: '1px solid rgba(15,0,0,0.2)' }}
+    >
+      <span className="text-base font-bold" style={{ color: '#fdfcfc', letterSpacing: '-0.01em' }}>
+        skill<span style={{ color: '#6e6e73' }}>.</span>checker
+      </span>
+      <div className="flex items-center gap-6">
+        <a
+          href="/admin"
+          className="text-sm"
+          style={{ color: '#6e6e73', textDecoration: 'none' }}
+        >
+          admin
+        </a>
+        <span className="text-sm" style={{ color: '#6e6e73' }}>
+          v1.0.0
+        </span>
+        <span
+          className="text-xs px-2 py-0.5"
+          style={{
+            color: '#30d158',
+            border: '1px solid rgba(48,209,88,0.3)',
+            borderRadius: '4px',
+          }}
+        >
+          live
+        </span>
+      </div>
+    </nav>
+  );
+}
+
+// ── Hero ───────────────────────────────────────────────────────────────────
+
+function Hero() {
+  return (
+    <div className="mb-12">
+      <div className="mb-3">
+        <span className="text-sm" style={{ color: '#007aff' }}>
+          $ skill-checker --analyze
+        </span>
+      </div>
+      <h1
+        className="font-bold mb-4"
+        style={{ fontSize: '38px', lineHeight: 1.5, color: '#fdfcfc' }}
+      >
+        Analyze Claude Skills
+        <br />
+        <span style={{ color: '#9a9898' }}>for Security Threats</span>
+      </h1>
+      <p className="text-base max-w-xl" style={{ color: '#9a9898', lineHeight: 1.6 }}>
+        Detect prompt injections, jailbreaks, and manipulation vectors in
+        Claude system prompts. Powered by vector similarity (Pinecone) for
+        instant pattern matching and Claude Sonnet for zero-day analysis.
+      </p>
+
+      <div className="mt-8 space-y-2">
+        {[
+          ['⚡', 'vector cache', '— instant match for known patterns (>0.90 cosine similarity)'],
+          ['🔍', 'llm analysis', '— zero-day threat detection via Claude Sonnet / Gemini'],
+          ['🛡', 'structured report', '— benefits, harms, and detected techniques'],
+        ].map(([icon, name, desc]) => (
+          <div key={name} className="flex items-center gap-2 text-sm">
+            <span>{icon}</span>
+            <span className="font-bold" style={{ color: '#fdfcfc', minWidth: '120px' }}>
+              {name}
+            </span>
+            <span style={{ color: '#6e6e73' }}>{desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Paywall Alert ──────────────────────────────────────────────────────────
+
+function PaywallAlert({ charCount }: { charCount: number }) {
+  return (
+    <div
+      className="w-full p-5 mb-6"
+      style={{
+        backgroundColor: 'rgba(255,59,48,0.07)',
+        border: '2px solid #ff3b30',
+        borderRadius: '4px',
+      }}
+    >
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="font-bold mb-1" style={{ color: '#ff3b30', fontSize: '15px' }}>
+            ✕ Character Limit Exceeded
+          </p>
+          <p className="text-sm" style={{ color: '#9a9898', lineHeight: 1.6 }}>
+            Free tier is capped at{' '}
+            <span style={{ color: '#fdfcfc', fontWeight: 700 }}>
+              {CHAR_LIMIT.toLocaleString()} chars
+            </span>
+            . Your skill is{' '}
+            <span style={{ color: '#ff3b30', fontWeight: 700 }}>
+              {charCount.toLocaleString()} chars
+            </span>
+            . Unlock Deep Scan for unlimited prompt length and priority analysis.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <a
+          href={STRIPE_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-block',
+            backgroundColor: '#fdfcfc',
+            color: '#201d1d',
+            borderRadius: '4px',
+            padding: '8px 20px',
+            fontSize: '14px',
+            fontWeight: 700,
+            fontFamily: 'inherit',
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          Unlock Deep Scan — $1.00
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ── Error Banner ───────────────────────────────────────────────────────────
+
+function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div
+      className="w-full flex items-start justify-between gap-4 p-4 mb-6"
+      style={{
+        backgroundColor: 'rgba(255,59,48,0.08)',
+        border: '1px solid rgba(255,59,48,0.3)',
+        borderRadius: '4px',
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <span style={{ color: '#ff3b30' }}>✕</span>
+        <div>
+          <p className="text-sm font-bold mb-1" style={{ color: '#ff3b30' }}>
+            analysis failed
+          </p>
+          <p className="text-sm" style={{ color: '#9a9898' }}>
+            {message}
+          </p>
         </div>
+      </div>
+      <button
+        onClick={onDismiss}
+        className="text-xs shrink-0"
+        style={{ color: '#6e6e73', fontFamily: 'inherit', background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        dismiss
+      </button>
+    </div>
+  );
+}
+
+// ── Section Label ──────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-sm font-bold mb-4" style={{ color: '#9a9898', letterSpacing: '0.08em' }}>
+      {children}
+    </p>
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────
+
+export default function Page() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [charCount, setCharCount] = useState(0);
+
+  const limitExceeded = charCount > CHAR_LIMIT;
+
+  async function handleAnalyze(skill: string) {
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skill }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? `server error (${res.status})`);
+        return;
+      }
+
+      setResult(data as AnalysisResult);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'network error — check your connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: '#201d1d' }}>
+      <Nav />
+
+      <main className="mx-auto px-6 py-16" style={{ maxWidth: '860px' }}>
+        <Hero />
+
+        {/* Live Metrics Dashboard */}
+        <MetricsDashboard />
+
+        {/* Divider */}
+        <div className="mb-8" style={{ borderTop: '1px solid rgba(15,0,0,0.2)' }} />
+
+        {/* Skill Input */}
+        <section className="mb-6">
+          <SectionLabel>SKILL INPUT</SectionLabel>
+          <SkillInput
+            onAnalyze={handleAnalyze}
+            isLoading={isLoading}
+            onTextChange={(text) => setCharCount(text.length)}
+            limitExceeded={limitExceeded}
+          />
+        </section>
+
+        {/* Paywall — shown only when char limit exceeded */}
+        {limitExceeded && <PaywallAlert charCount={charCount} />}
+
+        {/* Analysis error */}
+        {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
+
+        {/* Loading */}
+        {isLoading && (
+          <section className="mb-10">
+            <SectionLabel>ANALYSIS</SectionLabel>
+            <LoadingState />
+          </section>
+        )}
+
+        {/* Result */}
+        {result && !isLoading && (
+          <section className="mb-10">
+            <SectionLabel>ANALYSIS RESULT</SectionLabel>
+            <ResultCard result={result} />
+          </section>
+        )}
+
+        {/* Daily Threat Intelligence Ticker */}
+        <section className="mb-10">
+          <SectionLabel>THREAT INTELLIGENCE</SectionLabel>
+          <ThreatTicker />
+        </section>
+
+        {/* Footer */}
+        <footer
+          className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs"
+          style={{ borderTop: '1px solid rgba(15,0,0,0.2)', color: '#6e6e73' }}
+        >
+          <span>
+            skill<span style={{ color: '#302c2c' }}>.</span>checker — built with{' '}
+            <span style={{ color: '#9a9898' }}>Claude Sonnet</span> +{' '}
+            <span style={{ color: '#9a9898' }}>Pinecone</span> +{' '}
+            <span style={{ color: '#9a9898' }}>OpenAI Embeddings</span>
+          </span>
+          <span>for educational &amp; security research use</span>
+        </footer>
       </main>
     </div>
   );
