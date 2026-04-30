@@ -17,7 +17,7 @@
 [![License](https://img.shields.io/badge/license-MIT-007aff?style=flat-square&labelColor=201d1d)](./LICENSE)
 [![Live](https://img.shields.io/badge/live-production-30d158?style=flat-square&labelColor=201d1d)](https://skill-checker-iota.vercel.app)
 
-**[Live Website](https://skill-checker-iota.vercel.app)** · [Admin Dashboard](https://skill-checker-iota.vercel.app/admin) · [Report a Bug](https://github.com/xnorphic/syncstream/issues) · [Request a Feature](https://github.com/xnorphic/syncstream/issues)
+**[Live Website](https://skill-checker-iota.vercel.app)** · [Report a Bug](https://skill-checker-iota.vercel.app/report-bug) · [Request a Feature](https://skill-checker-iota.vercel.app/request-feature)
 
 ---
 
@@ -58,12 +58,6 @@ The LLM pipeline uses a try/catch architecture. Claude Sonnet is the primary ana
 ### 📏 5,000 Character Limit *(Higher Limits Coming Soon)*
 The current version supports up to 5,000 characters per skill analysis. Skills exceeding this limit trigger a high-visibility alert — the Analyze button is disabled and a "Higher limits coming soon" notice appears. The character counter turns amber at 4,000 and red at 5,000. Enforced both client-side and server-side. Paid tiers with expanded limits are in development.
 
-### 🛡 Secure Admin Dashboard
-A password-protected admin panel at `/admin` built with Material UI (dark-themed to DESIGN.md spec). The frontend sends the admin secret as a Bearer token — comparison happens exclusively server-side against the `ADMIN_SECRET` env var. The browser **never** receives the secret. Features:
-- Query Pinecone top-50 via zero-vector similarity
-- Threat ID, level chip, summary, and flagged harms per row
-- Color-coded severity: Emerald (safe) / Amber (warning) / Crimson (danger)
-
 ### 🤖 V1.1 Auto-Curation Engine *(New)*
 Safe skills don't disappear after analysis — they enter an automated evaluation pipeline. The `/api/admin/curate` endpoint:
 
@@ -73,39 +67,6 @@ Safe skills don't disappear after analysis — they enter an automated evaluatio
 4. Appends a scored row to `admin_assets/rating_tracker.csv` — Notes column left blank for human review
 
 The result: a self-growing, locally-stored library of production-grade AI skills — automatically organized, scored, and curated.
-
----
-
-## Architecture
-
-```
-                    ┌──────────────────────────────────────┐
-                    │         skill.checker  V1.1           │
-                    │       Next.js 16.2 App Router         │
-                    └──────────────┬───────────────────────┘
-                                   │
-           ┌───────────────────────┼───────────────────────┐
-           │                       │                       │
- ┌─────────▼──────────┐  ┌─────────▼────────┐  ┌──────────▼───────┐
- │   /api/analyze     │  │ /api/admin/       │  │ /api/admin/      │
- │   (Main Pipeline)  │  │ threats           │  │ curate           │
- └─────────┬──────────┘  └─────────┬────────┘  └──────────┬───────┘
-           │                       │                       │
- ┌─────────▼──────────┐            │             ┌─────────▼────────┐
- │ embeddingService   │            │             │ LLM Categorizer  │
- │ OpenAI text-3-small│            │             │ + Rubric Scorer  │
- └─────────┬──────────┘            │             └─────────┬────────┘
-           │                       │                       │
- ┌─────────▼──────────┐  ┌─────────▼────────┐  ┌─────────▼────────┐
- │  vectorDbService   │  │    Pinecone       │  │  vetted_skills/  │
- │  Pinecone >0.90    ├──►  (top-50 scan)   │  │  rating_tracker  │
- └─────────┬──────────┘  └──────────────────┘  └──────────────────┘
-           │
- ┌─────────▼──────────┐
- │ llmAnalyzerService │
- │  Claude → Gemini   │
- └────────────────────┘
-```
 
 ---
 

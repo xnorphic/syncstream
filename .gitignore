@@ -42,3 +42,6 @@ next-env.d.ts
 
 # vetted skills — local storage only, must never be pushed publicly
 vetted_skills/
+
+# feedback form submissions — private, never commit
+feedback_data/

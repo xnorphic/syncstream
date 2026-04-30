@@ -285,7 +285,14 @@ export default function Page() {
             <span style={{ color: '#9a9898' }}>Pinecone</span> +{' '}
             <span style={{ color: '#9a9898' }}>OpenAI Embeddings</span>
           </span>
-          <span>for educational &amp; security research use</span>
+          <div className="flex items-center gap-4">
+            <a href="/report-bug" style={{ color: '#6e6e73', textDecoration: 'none' }}>
+              report bug
+            </a>
+            <a href="/request-feature" style={{ color: '#6e6e73', textDecoration: 'none' }}>
+              request feature
+            </a>
+          </div>
         </footer>
       </main>
     </div>
