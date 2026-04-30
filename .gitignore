@@ -42,3 +42,6 @@ next-env.d.ts
 
 # vetted skills — local storage only, must never be pushed publicly
 vetted_skills/
+
+# analytics event logs — local only, never commit raw event data
+analytics_data/
