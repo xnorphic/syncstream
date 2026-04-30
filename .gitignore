@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# vetted skills — local storage only, must never be pushed publicly
+vetted_skills/
