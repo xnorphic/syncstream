@@ -52,17 +52,10 @@ Results return as structured JSON: `threat_level`, `summary`, `benefits`, `poten
 ### 🧠 Pinecone Vector Memory
 Analyzed skills are embedded and upserted into Pinecone with a cosine similarity threshold of **>0.90**. This creates a persistent threat memory: the second a known-malicious prompt variant appears, it's identified instantly — no LLM call needed. As the index grows, the system becomes faster and smarter. This is the difference between a one-shot scanner and a **living security system**.
 
-### 🔄 Gemini 2.5 Flash Fallback
-The LLM pipeline uses a try/catch architecture. Claude Sonnet is the primary analyzer. If Anthropic is unavailable (credit exhaustion, rate limits, regional outages), the system automatically falls back to Google Gemini 2.5 Flash with the identical meta-prompt. The frontend displays `via gemini fallback` transparently. Zero downtime. Zero user friction.
 
 ### 💳 Stripe Paywall — 5,000 Character Limit
 Free-tier analysis is capped at 5,000 characters. Skills exceeding this limit trigger a high-visibility paywall alert — the Analyze button unmounts and a `Unlock Deep Scan — $1.00` Stripe CTA appears. The character counter turns amber at 4,000 and red at 5,000. Enforced both client-side and server-side.
 
-### 🛡 Secure Admin Dashboard
-A password-protected admin panel at `/admin` built with Material UI (dark-themed to DESIGN.md spec). The frontend sends the admin secret as a Bearer token — comparison happens exclusively server-side against the `ADMIN_SECRET` env var. The browser **never** receives the secret. Features:
-- Query Pinecone top-50 via zero-vector similarity
-- Threat ID, level chip, summary, and flagged harms per row
-- Color-coded severity: Emerald (safe) / Amber (warning) / Crimson (danger)
 
 ### 🤖 V1.1 Auto-Curation Engine *(New)*
 Safe skills don't disappear after analysis — they enter an automated evaluation pipeline. The `/api/admin/curate` endpoint:
@@ -84,22 +77,22 @@ The result: a self-growing, locally-stored library of production-grade AI skills
                     │       Next.js 16.2 App Router         │
                     └──────────────┬───────────────────────┘
                                    │
-           ┌───────────────────────┼───────────────────────┐
-           │                       │                       │
- ┌─────────▼──────────┐  ┌─────────▼────────┐  ┌──────────▼───────┐
- │   /api/analyze     │  │ /api/admin/       │  │ /api/admin/      │
- │   (Main Pipeline)  │  │ threats           │  │ curate           │
- └─────────┬──────────┘  └─────────┬────────┘  └──────────┬───────┘
-           │                       │                       │
- ┌─────────▼──────────┐            │             ┌─────────▼────────┐
- │ embeddingService   │            │             │ LLM Categorizer  │
- │ OpenAI text-3-small│            │             │ + Rubric Scorer  │
- └─────────┬──────────┘            │             └─────────┬────────┘
-           │                       │                       │
- ┌─────────▼──────────┐  ┌─────────▼────────┐  ┌─────────▼────────┐
- │  vectorDbService   │  │    Pinecone       │  │  vetted_skills/  │
- │  Pinecone >0.90    ├──►  (top-50 scan)   │  │  rating_tracker  │
- └─────────┬──────────┘  └──────────────────┘  └──────────────────┘
+           ┌───────────────────────┼
+           │                       │                       
+ ┌─────────▼──────────┐  ┌─────────▼────────┐  
+ │   /api/analyze     │  │ /api/admin/       │  
+ │   (Main Pipeline)  │  │ threats           │  
+ └─────────┬──────────┘  └─────────┬────────┘  
+           │                       │                     
+ ┌─────────▼──────────┐            │            
+ │ embeddingService   │            │            
+ │ OpenAI text-3-small│            │            
+ └─────────┬──────────┘            │            
+           │                       │                     
+ ┌─────────▼──────────┐  ┌─────────▼────────┐  
+ │  vectorDbService   │  │    Pinecone       │ 
+ │  Pinecone >0.90    ├──►  (top-50 scan)   │  
+ └─────────┬──────────┘  └──────────────────┘  
            │
  ┌─────────▼──────────┐
  │ llmAnalyzerService │
@@ -119,7 +112,7 @@ The result: a self-growing, locally-stored library of production-grade AI skills
 | Embedding | OpenAI `text-embedding-3-small` | 1536-dim vector generation |
 | Vector DB | Pinecone v7 | Cosine similarity threat memory |
 | Primary LLM | Anthropic Claude Sonnet | Zero-day threat analysis |
-| Fallback LLM | Google Gemini 2.5 Flash | Automatic failover |
+| Fallback LLM | Automatic failover |
 | Admin UI | Material UI v9 (dark-themed) | Threat intelligence table |
 | Font | IBM Plex Mono / Berkeley Mono | Terminal-native monospace aesthetic |
 | Deployment | Vercel (iad1 — Washington D.C.) | Edge-first production hosting |
@@ -187,82 +180,7 @@ ADMIN_SECRET=your-strong-random-secret-32-chars-min
 }
 ```
 
----
 
-### `GET /api/admin/threats`
-
-**Auth:** `Authorization: Bearer <ADMIN_SECRET>`
-
-Returns top-50 Pinecone matches (threat metadata, scores, summaries).
-
----
-
-### `POST /api/admin/curate` *(V1.1)*
-
-**Auth:** `Authorization: Bearer <ADMIN_SECRET>`
-
-**Request**
-```json
-{ "skill": "You are a Python expert...", "summary": "Python debugging assistant" }
-```
-
-**Response**
-```json
-{
-  "status": "curated",
-  "category": "Coding",
-  "subcategory": "Python",
-  "filename": "python-debugging-assistant-1234567890.md",
-  "total_score": 8.4,
-  "decision": "Strong"
-}
-```
-
----
-
-## V1.1 Skill Curation Engine
-
-### Evaluation Rubric
-
-| Criterion | Max Pts | Question |
-|-----------|---------|---------|
-| Clarity of Purpose | 15 | Can you understand it in one sentence? |
-| Trigger Accuracy | 20 | Does it trigger when and only when it should? |
-| Scope Definition | 15 | Are in/out boundaries clearly defined? |
-| Practical Utility | 20 | Real, frequent problem or niche edge case? |
-| Content Quality | 15 | Actionable and complete? |
-| Maintenance & Accuracy | 10 | Will this remain valid in 6 months? |
-| **Total** | **95** | Scaled to /10 |
-
-**Decision thresholds:** `9–10 = Keep` · `7–8 = Strong` · `5–6 = Consider` · `<5 = Remove`
-
-### Storage Structure
-
-```
-vetted_skills/           ← git-ignored, local only
-├── Coding/Python/
-├── Writing/Copywriting/
-└── Analysis/Financial/
-
-admin_assets/            ← tracked in git (no secrets)
-├── skill_evaluator_prompt.md
-└── rating_tracker.csv
-```
-
----
-
-## Security Model
-
-| Surface | Control |
-|---------|---------|
-| `ADMIN_SECRET` | Server-side only — never sent to browser |
-| `.env.local` | Git-ignored via `.env*` glob |
-| `vetted_skills/` | Git-ignored — local filesystem only |
-| API keys | Encrypted at rest in Vercel |
-| Pinecone access | Server-side only — client never touches vector DB |
-| Character paywall | Client UX enforced by server input validation |
-
----
 
 ## Roadmap
 
