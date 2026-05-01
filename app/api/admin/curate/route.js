@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -183,7 +184,7 @@ export async function POST(request) {
     const filePath = path.join(dirPath, filename);
     fs.writeFileSync(filePath, buildSkillMarkdown(skill, summary, evaluation), 'utf8');
 
-    // 4. Append row to rating_tracker.csv
+    // 4. Append row to rating_tracker.csv (local mirror)
     const csvPath = path.join(process.cwd(), 'admin_assets', 'rating_tracker.csv');
     const date = new Date().toISOString().split('T')[0];
     appendCSVRow(csvPath, [
@@ -202,6 +203,48 @@ export async function POST(request) {
       evaluation.category,
       evaluation.subcategory,
     ]);
+
+    // 5. Mirror writes to Supabase (non-blocking — local writes already succeeded)
+    const markdownContent = buildSkillMarkdown(skill, summary, evaluation);
+    const storagePath = `${safeCategory}/${safeSubcategory}/${filename}`;
+
+    if (supabaseAdmin) {
+      await Promise.allSettled([
+        // Insert evaluation row into skill_evaluations table
+        supabaseAdmin.from('skill_evaluations').insert({
+          skill_name: summary || slug,
+          category: evaluation.category,
+          subcategory: evaluation.subcategory,
+          clarity: evaluation.clarity,
+          trigger_accuracy: evaluation.trigger_accuracy,
+          scope: evaluation.scope,
+          utility: evaluation.utility,
+          content_quality: evaluation.content_quality,
+          maintenance: evaluation.maintenance,
+          total_score: evaluation.scaled_score,
+          decision: evaluation.decision,
+          red_flags: evaluation.red_flags ?? '',
+          notes: '',
+          storage_path: storagePath,
+        }),
+        // Upload .md file to vetted-skills storage bucket
+        supabaseAdmin.storage
+          .from('vetted-skills')
+          .upload(storagePath, markdownContent, {
+            contentType: 'text/markdown',
+            upsert: false,
+          }),
+      ]).then((results) => {
+        results.forEach((r, i) => {
+          const label = i === 0 ? 'skill_evaluations insert' : 'storage upload';
+          if (r.status === 'rejected') {
+            console.error(`[supabase] ${label} failed:`, r.reason);
+          } else if (r.value?.error) {
+            console.error(`[supabase] ${label} error:`, r.value.error.message);
+          }
+        });
+      });
+    }
 
     return Response.json({
       status: 'curated',
