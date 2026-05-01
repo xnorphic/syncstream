@@ -45,3 +45,6 @@ vetted_skills/
 
 # feedback form submissions — private, never commit
 feedback_data/
+
+# analytics event logs — local only, never commit raw event data
+analytics_data/

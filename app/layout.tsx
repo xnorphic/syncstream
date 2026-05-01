@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
+import AnalyticsShell from '@/components/AnalyticsShell';
 
 const mono = IBM_Plex_Mono({
   weight: ['400', '500', '700'],
@@ -91,7 +92,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <AnalyticsShell />
+      </body>
     </html>
   );
 }
