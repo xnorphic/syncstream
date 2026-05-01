@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import SkillInput from '@/components/SkillInput';
 import ResultCard, { type AnalysisResult } from '@/components/ResultCard';
+import OptimizeSkillPanel from '@/components/OptimizeSkillPanel';
 import LoadingState from '@/components/LoadingState';
 import MetricsDashboard from '@/components/MetricsDashboard';
 import ThreatTicker from '@/components/ThreatTicker';
@@ -192,6 +193,7 @@ export default function Page() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [charCount, setCharCount] = useState(0);
+  const [currentSkill, setCurrentSkill] = useState('');
 
   const limitExceeded = charCount > CHAR_LIMIT;
 
@@ -199,6 +201,7 @@ export default function Page() {
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setCurrentSkill(skill);
 
     try {
       const res = await fetch('/api/analyze', {
@@ -241,7 +244,7 @@ export default function Page() {
           <SkillInput
             onAnalyze={handleAnalyze}
             isLoading={isLoading}
-            onTextChange={(text) => setCharCount(text.length)}
+            onTextChange={(text) => { setCharCount(text.length); setCurrentSkill(text); }}
             limitExceeded={limitExceeded}
           />
         </section>
@@ -262,10 +265,15 @@ export default function Page() {
 
         {/* Result */}
         {result && !isLoading && (
-          <section className="mb-10">
+          <section className="mb-6">
             <SectionLabel>ANALYSIS RESULT</SectionLabel>
             <ResultCard result={result} />
           </section>
+        )}
+
+        {/* Optimize Skill — shown after a result is available */}
+        {result && !isLoading && currentSkill && (
+          <OptimizeSkillPanel skill={currentSkill} result={result} />
         )}
 
         {/* Daily Threat Intelligence Ticker */}
