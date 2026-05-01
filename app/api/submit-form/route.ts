@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { appendFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
 
@@ -72,6 +73,25 @@ export async function POST(req: NextRequest) {
     };
 
     appendToLog(entry);
+
+    // Mirror to Supabase feedback_submissions table (non-blocking)
+    if (supabaseAdmin) {
+      supabaseAdmin
+        .from('feedback_submissions')
+        .insert({
+          type,
+          name: entry.name,
+          email: entry.email,
+          message: entry.message,
+          country: geo.country,
+          region: geo.region,
+          city: geo.city,
+          ip_anon: ip,
+        })
+        .then(({ error }) => {
+          if (error) console.error('[supabase] feedback_submissions insert failed:', error.message);
+        });
+    }
 
     return NextResponse.json({ ok: true, message: 'Submitted successfully. Thank you!' });
   } catch {
