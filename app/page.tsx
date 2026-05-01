@@ -30,7 +30,7 @@ function Nav() {
           admin
         </a>
         <span className="text-sm" style={{ color: '#6e6e73' }}>
-          v1.0.0
+          v1.3.0
         </span>
         <span
           className="text-xs px-2 py-0.5"
